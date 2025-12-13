@@ -1,30 +1,56 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const connectDB = require("./config/db");
+// Load environment variables
+require('dotenv').config();
 
-dotenv.config();
-connectDB();
+const express = require('express');
+const cors = require('cors');
+const connectDB = require('./config/db');
 
 const app = express();
+
+/* =====================
+   Database Connection
+===================== */
+connectDB();
+
+/* =====================
+   Middlewares
+===================== */
 app.use(cors());
 app.use(express.json());
 
-// Import routes
+/* =====================
+   Routes
+===================== */
 const userRoutes = require('./users/userRoute');
-const commentRoutes = require('./comments/commentRoute');
 const postRoutes = require('./posts/postRoute');
+const commentRoutes = require('./comments/commentRoute');
 const messageRoutes = require('./messages/messageRoute');
 const communityRoutes = require('./communities/communityRoute');
 const notificationRoutes = require('./notifications/notificationRoute');
+// i added /api/users instead of /users
+app.use('/api/users', userRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/communities', communityRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.post('/test', (req, res) => {
+  res.json({ ok: true });
+});
 
-// Mount routes
-app.use('/users', userRoutes);
-app.use('/comments', commentRoutes);
-app.use('/posts', postRoutes);
-app.use('/messages', messageRoutes);
-app.use('/communities', communityRoutes);
-app.use('/notifications', notificationRoutes);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+/* =====================
+   Health Check (optional)   just an extra
+===================== */
+app.get('/', (req, res) => {
+  res.send('Reddit backend running 🚀');
+});
+
+/* =====================
+   Server Start
+===================== */
+const PORT = process.env.PORT || 5001;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

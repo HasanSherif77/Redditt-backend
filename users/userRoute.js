@@ -5,8 +5,15 @@ const {
   getUserById,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  signup,
+  login
 } = require('./userController');
+
+//added paths for auth: 
+/* AUTH */
+router.post('/signup', signup);
+router.post('/login', login);
 
 // GET /api/users - Get all users
 router.get('/', getAllUsers);
