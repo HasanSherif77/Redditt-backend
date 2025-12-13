@@ -3,33 +3,29 @@ const mongoose = require('mongoose');
 const notificationSchema = new mongoose.Schema({
   type: {
     type: String,
-    required: true
-  },
-  title: {
-    type: String,
     required: true,
-    trim: true
+    enum: ['comment', 'reply', 'upvote', 'downvote', 'message', 'community']
   },
-  description: {
-    type: String,
-    trim: true
-  },
-  read: {
-    type: Boolean,
-    default: false
-  },
-  userId: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  postId: {
+  relatedUser: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  relatedPost: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Post'
   },
-  communityId: {
+  relatedComment: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Community'
+    ref: 'Comment'
+  },
+  read: {
+    type: Boolean,
+    default: false
   },
   createdAt: {
     type: Date,
