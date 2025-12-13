@@ -3,7 +3,7 @@ const Post = require('./postModel');
 // Get all posts
 const getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find().populate('author').populate('community');
+    const posts = await Post.find().populate('userId').populate('communityId');
     res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -14,8 +14,8 @@ const getAllPosts = async (req, res) => {
 const getPostById = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
-      .populate('author')
-      .populate('community');
+      .populate('userId')
+      .populate('communityId');
     if (!post) {
       return res.status(404).json({ error: 'Post not found' });
     }
@@ -30,8 +30,8 @@ const createPost = async (req, res) => {
   try {
     const post = new Post(req.body);
     await post.save();
-    await post.populate('author');
-    await post.populate('community');
+    await post.populate('userId');
+    await post.populate('communityId');
     res.status(201).json(post);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -45,7 +45,7 @@ const updatePost = async (req, res) => {
       req.params.id,
       { ...req.body, updatedAt: Date.now() },
       { new: true, runValidators: true }
-    ).populate('author').populate('community');
+    ).populate('userId').populate('communityId');
     if (!post) {
       return res.status(404).json({ error: 'Post not found' });
     }
@@ -68,11 +68,75 @@ const deletePost = async (req, res) => {
   }
 };
 
+// Upvote post (increments votesCount)
+const upvotePost = async (req, res) => {
+  try {
+    const post = await Post.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { votesCount: 1 } },
+      { new: true }
+    ).populate('userId').populate('communityId');
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    res.status(200).json(post);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Downvote post (decrements votesCount, not below 0)
+const downvotePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    post.votesCount = Math.max(0, (post.votesCount || 0) - 1);
+    await post.save();
+    await post.populate('userId');
+    await post.populate('communityId');
+
+    res.status(200).json(post);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get all posts by a specific user
+const getPostsByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const posts = await Post.find({ userId }).populate('userId').populate('communityId');
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get all posts in a specific community
+const getPostsByCommunity = async (req, res) => {
+  try {
+    const { communityId } = req.params;
+    const posts = await Post.find({ communityId }).populate('userId').populate('communityId');
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getAllPosts,
   getPostById,
   createPost,
   updatePost,
-  deletePost
+  deletePost,
+  upvotePost,
+  downvotePost,
+  getPostsByUser,
+  getPostsByCommunity
 };
 
