@@ -1,0 +1,47 @@
+[
+  {
+    "userId": "507f1f77bcf86cd799439011",
+    "communityId": "507f1f77bcf86cd799439001",
+    "title": "Getting Started with Node.js",
+    "body": "Node.js is a powerful JavaScript runtime built on Chrome's V8 JavaScript engine. It's perfect for building scalable server-side applications.",
+    "mediaUrl": null,
+    "votesCount": 0,
+    "commentsCount": 0
+  },
+  {
+    "userId": "507f1f77bcf86cd799439012",
+    "communityId": "507f1f77bcf86cd799439001",
+    "title": "Best Practices for RESTful APIs",
+    "body": "When designing REST APIs, always use proper HTTP methods, status codes, and naming conventions. Consistency is key!",
+    "mediaUrl": null,
+    "votesCount": 0,
+    "commentsCount": 0
+  },
+  {
+    "userId": "507f1f77bcf86cd799439011",
+    "communityId": "507f1f77bcf86cd799439002",
+    "title": "MongoDB Indexing Strategy",
+    "body": "Proper indexing can dramatically improve query performance. Always profile your queries to identify bottlenecks.",
+    "mediaUrl": null,
+    "votesCount": 0,
+    "commentsCount": 0
+  },
+  {
+    "userId": "507f1f77bcf86cd799439012",
+    "communityId": "507f1f77bcf86cd799439002",
+    "title": "Docker for Development",
+    "body": "Docker containers ensure consistency between development and production environments. Use docker-compose for multi-container setups.",
+    "mediaUrl": null,
+    "votesCount": 0,
+    "commentsCount": 0
+  },
+  {
+    "userId": "507f1f77bcf86cd799439011",
+    "communityId": "507f1f77bcf86cd799439001",
+    "title": "Express.js Middleware Deep Dive",
+    "body": "Middleware functions are the core of Express.js. They have access to the request, response, and next function in the application lifecycle.",
+    "mediaUrl": null,
+    "votesCount": 0,
+    "commentsCount": 0
+  }
+]
