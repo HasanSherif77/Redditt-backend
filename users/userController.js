@@ -1,5 +1,10 @@
 const User = require('./userModel');
 
+
+//for auth => 
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
 // Get all users
 const getAllUsers = async (req, res) => {
   try {
@@ -63,12 +68,65 @@ const deleteUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+// added signup and login logic 
+const signup = async (req, res,next) => {
+  try {
+    const { username, email, password } = req.body;
+
+    const exists = await User.findOne({ $or: [{ email }, { username }] });
+    if (exists) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+
+    const user = new User({ username, email, password });
+    await user.save();
+
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(201).json({ user, token });
+  } catch (error) {
+    next(error);
+  }
+};
+const login = async (req, res,next) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(200).json({ user, token });
+  } catch (error) {
+   next(error);
+  }
+};
+
 
 module.exports = {
   getAllUsers,
   getUserById,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  signup,
+  login
 };
+
 
