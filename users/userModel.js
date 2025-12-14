@@ -20,6 +20,22 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
+  displayname: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  avatarUrl: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  description: {
+    type: String,
+    trim: true,
+    maxlength: 500,
+    default: ''
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -32,8 +48,10 @@ const userSchema = new mongoose.Schema({
 
 /* Hash password before save */
 userSchema.pre('save', async function () {
-  if (!this.isModified('password')) return;
-  this.password = await bcrypt.hash(this.password, 10);
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  this.updatedAt = Date.now();
 });
 
 

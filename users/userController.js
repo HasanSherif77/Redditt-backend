@@ -39,6 +39,23 @@ const createUser = async (req, res) => {
   }
 };
 
+// Search users by query string (matches username, displayname or email)
+const searchUsers = async (req, res) => {
+  try {
+    const q = req.query.q;
+    if (!q) return res.status(400).json({ error: 'Query parameter q is required' });
+
+    const regex = new RegExp(q, 'i');
+    const users = await User.find({
+      $or: [{ username: regex }, { displayname: regex }, { email: regex }]
+    });
+
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Update user
 const updateUser = async (req, res) => {
   try {
@@ -71,14 +88,14 @@ const deleteUser = async (req, res) => {
 // added signup and login logic 
 const signup = async (req, res,next) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, displayname, avatarUrl, description } = req.body;
 
     const exists = await User.findOne({ $or: [{ email }, { username }] });
     if (exists) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
-    const user = new User({ username, email, password });
+    const user = new User({ username, email, password, displayname, avatarUrl, description });
     await user.save();
 
     const token = jwt.sign(
@@ -125,6 +142,7 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
+  searchUsers,
   signup,
   login
 };
