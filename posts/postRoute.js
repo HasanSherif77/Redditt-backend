@@ -27,8 +27,8 @@ router.get('/:id', getPostById);
 // POST /api/posts - Create new post
 router.post('/', createPost);
 
-// PUT /api/posts/:id - Update post
-router.put('/:id', updatePost);
+// PATCH /api/posts/:id - Update post
+router.patch('/:id', updatePost);
 
 // DELETE /api/posts/:id - Delete post
 router.delete('/:id', deletePost);

@@ -21,8 +21,8 @@ router.get('/:id', getCommentById);
 // POST /api/comments - Create new comment
 router.post('/', createComment);
 
-// PUT /api/comments/:id - Update comment
-router.put('/:id', updateComment);
+// PATCH /api/comments/:id - Update comment
+router.patch('/:id', updateComment);
 
 // DELETE /api/comments/:id - Delete comment
 router.delete('/:id', deleteComment);

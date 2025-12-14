@@ -65,7 +65,7 @@ const updateComment = async (req, res) => {
   try {
     const comment = await Comment.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { ...req.body },
       { new: true, runValidators: true }
     )
       .populate('userId')

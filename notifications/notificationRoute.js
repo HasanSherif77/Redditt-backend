@@ -17,8 +17,8 @@ router.get('/:id', getNotificationById);
 // POST /api/notifications - Create new notification
 router.post('/', createNotification);
 
-// PUT /api/notifications/:id - Update notification
-router.put('/:id', updateNotification);
+// PATCH /api/notifications/:id - Update notification
+router.patch('/:id', updateNotification);
 
 // DELETE /api/notifications/:id - Delete notification
 router.delete('/:id', deleteNotification);

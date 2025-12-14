@@ -17,8 +17,8 @@ router.get('/:id', getMessageById);
 // POST /api/messages - Create new message
 router.post('/', createMessage);
 
-// PUT /api/messages/:id - Update message
-router.put('/:id', updateMessage);
+// PATCH /api/messages/:id - Update message
+router.patch('/:id', updateMessage);
 
 // DELETE /api/messages/:id - Delete message
 router.delete('/:id', deleteMessage);

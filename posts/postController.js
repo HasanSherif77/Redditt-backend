@@ -43,7 +43,7 @@ const updatePost = async (req, res) => {
   try {
     const post = await Post.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, updatedAt: Date.now() },
+      { ...req.body },
       { new: true, runValidators: true }
     ).populate('userId').populate('communityId');
     if (!post) {

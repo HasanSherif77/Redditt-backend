@@ -45,7 +45,7 @@ const updateMessage = async (req, res) => {
   try {
     const message = await Message.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, updatedAt: Date.now() },
+      { ...req.body },
       { new: true, runValidators: true }
     ).populate('sender').populate('receiver');
     if (!message) {

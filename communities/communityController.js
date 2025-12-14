@@ -46,12 +46,7 @@ const updateCommunity = async (req, res) => {
   try {
     const community = await Community.findByIdAndUpdate(
       req.params.id,
-      {
-        communityName: req.body.communityName,
-        communityDescription: req.body.communityDescription,
-        communityIcon: req.body.communityIcon,
-        communityBanner: req.body.communityBanner
-      },
+      { ...req.body },
       { new: true, runValidators: true }
     );
 
