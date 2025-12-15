@@ -8,20 +8,47 @@ const {
   deleteMessage
 } = require('./messageController');
 
-// GET /api/messages - Get all messages
-router.get('/', getAllMessages);
+const { authenticateToken } = require('../middleware/authMiddleware');
 
-// GET /api/messages/:id - Get message by ID
-router.get('/:id', getMessageById);
+// Custom middleware to check message ownership
+const checkMessageOwnership = async (req, res, next) => {
+  try {
+    const Message = require('./messageModel');
+    const message = await Message.findById(req.params.id);
+    
+    if (!message) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
 
-// POST /api/messages - Create new message
-router.post('/', createMessage);
+    // Only sender can modify the message
+    if (message.sender.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'You can only modify your own messages' });
+    }
 
-// PUT /api/messages/:id - Update message
-router.put('/:id', updateMessage);
+    req.message = message;
+    next();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
-// DELETE /api/messages/:id - Delete message
-router.delete('/:id', deleteMessage);
+/* =====================
+   PROTECTED ROUTES
+===================== */
+
+// Get all messages for current user
+router.get('/', authenticateToken, getAllMessages);
+
+// Get specific message (user must be sender or receiver)
+router.get('/:id', authenticateToken, getMessageById);
+
+// Create new message
+router.post('/', authenticateToken, createMessage);
+
+// Update message (only sender can update)
+router.put('/:id', authenticateToken, checkMessageOwnership, updateMessage);
+
+// Delete message (only sender can delete)
+router.delete('/:id', authenticateToken, checkMessageOwnership, deleteMessage);
 
 module.exports = router;
-

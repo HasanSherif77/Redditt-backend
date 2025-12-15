@@ -7,28 +7,41 @@ const {
   updateUser,
   deleteUser,
   signup,
-  login
+  login,
+  getCurrentUser,
+  logout
 } = require('./userController');
 
-//added paths for auth: 
-/* AUTH */
+const { authenticateToken, authorizeUser } = require('../middleware/authMiddleware');
+
+/* =====================
+   PUBLIC ROUTES
+===================== */
 router.post('/signup', signup);
 router.post('/login', login);
+router.post('/logout', logout);
 
-// GET /api/users - Get all users
-router.get('/', getAllUsers);
+/* =====================
+   PROTECTED ROUTES
+===================== */
 
-// GET /api/users/:id - Get user by ID
-router.get('/:id', getUserById);
+// Get current user profile
+router.get('/me', authenticateToken, getCurrentUser);
 
-// POST /api/users - Create new user
+// Get all users (protected)
+router.get('/', authenticateToken, getAllUsers);
+
+// Get user by ID (protected)
+router.get('/:id', authenticateToken, getUserById);
+
+// Create new user (admin only or public signup via /signup)
+// This endpoint could be removed since we have /signup
 router.post('/', createUser);
 
-// PUT /api/users/:id - Update user
-router.put('/:id', updateUser);
+// Update user (user can only update themselves)
+router.put('/:id', authenticateToken, authorizeUser(), updateUser);
 
-// DELETE /api/users/:id - Delete user
-router.delete('/:id', deleteUser);
+// Delete user (user can only delete themselves)
+router.delete('/:id', authenticateToken, authorizeUser(), deleteUser);
 
 module.exports = router;
-

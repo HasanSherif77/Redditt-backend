@@ -17,33 +17,85 @@ connectDB();
 ===================== */
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 /* =====================
-   Routes
+   Request Logger (optional)
 ===================== */
-const userRoutes = require('./users/userRoute');
-const postRoutes = require('./posts/postRoute');
-const commentRoutes = require('./comments/commentRoute');
-const messageRoutes = require('./messages/messageRoute');
-const communityRoutes = require('./communities/communityRoute');
-const notificationRoutes = require('./notifications/notificationRoute');
-// i added /api/users instead of /users
-app.use('/api/users', userRoutes);
-app.use('/api/posts', postRoutes);
-app.use('/api/comments', commentRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/communities', communityRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.post('/test', (req, res) => {
-  res.json({ ok: true });
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
 });
 
-
 /* =====================
-   Health Check (optional)   just an extra
+   Basic Routes
 ===================== */
 app.get('/', (req, res) => {
-  res.send('Reddit backend running 🚀');
+  res.json({
+    message: 'Reddit Backend API',
+    version: '1.0.0',
+    endpoints: {
+      auth: {
+        signup: 'POST /api/users/signup',
+        login: 'POST /api/users/login',
+        currentUser: 'GET /api/users/me'
+      },
+      users: {
+        getAll: 'GET /api/users',
+        getOne: 'GET /api/users/:id',
+        update: 'PUT /api/users/:id',
+        delete: 'DELETE /api/users/:id'
+      },
+      messages: {
+        getAll: 'GET /api/messages',
+        getOne: 'GET /api/messages/:id',
+        create: 'POST /api/messages',
+        update: 'PUT /api/messages/:id',
+        delete: 'DELETE /api/messages/:id'
+      }
+    }
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date(),
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
+/* =====================
+   API Routes
+===================== */
+app.use('/api/users', require('./users/userRoute'));
+app.use('/api/messages', require('./messages/messageRoute'));
+
+/* =====================
+   Error Handler
+===================== */
+app.use((err, req, res, next) => {
+  console.error('Server Error:', err);
+  
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+  
+  res.status(statusCode).json({
+    success: false,
+    error: message,
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
+
+/* =====================
+   404 Handler
+===================== */
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Route not found',
+    path: req.originalUrl
+  });
 });
 
 /* =====================
@@ -52,5 +104,39 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`
+╔════════════════════════════════════════╗
+║         Reddit Backend Server          ║
+╠════════════════════════════════════════╣
+║  🚀 Server running on port: ${PORT}      ║
+║  📍 Local: http://localhost:${PORT}      ║
+║  🗄️  Database: ${process.env.MONGODB_URI ? 'Connected' : 'Not configured'}              ║
+╚════════════════════════════════════════╝
+
+📋 Available Endpoints:
+  • Health Check:  GET  /health
+  • API Docs:      GET  /
+  
+🔐 Authentication:
+  • Signup:        POST /api/users/signup
+  • Login:         POST /api/users/login
+  • Current User:  GET  /api/users/me (requires token)
+
+👥 Users:
+  • All Users:     GET  /api/users (requires token)
+  • User by ID:    GET  /api/users/:id (requires token)
+
+💬 Messages:
+  • All Messages:  GET  /api/messages (requires token)
+  • Send Message:  POST /api/messages (requires token)
+
+🔧 Use Authorization Header: Bearer <token>
+`);
+});
+
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\n👋 Server shutting down...');
+  mongoose.connection.close();
+  process.exit(0);
 });

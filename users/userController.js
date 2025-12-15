@@ -1,14 +1,11 @@
 const User = require('./userModel');
-
-
-//for auth => 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // Get all users
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find().select('-password');
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -18,7 +15,7 @@ const getAllUsers = async (req, res) => {
 // Get user by ID
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).select('-password');
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -28,12 +25,25 @@ const getUserById = async (req, res) => {
   }
 };
 
-// Create new user
+// Create new user (for admin or direct creation)
 const createUser = async (req, res) => {
   try {
-    const user = new User(req.body);
+    const { username, email, password } = req.body;
+    
+    // Check if user exists
+    const exists = await User.findOne({ $or: [{ email }, { username }] });
+    if (exists) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+    
+    const user = new User({ username, email, password });
     await user.save();
-    res.status(201).json(user);
+    
+    // Remove password from response
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    
+    res.status(201).json(userResponse);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -42,14 +52,23 @@ const createUser = async (req, res) => {
 // Update user
 const updateUser = async (req, res) => {
   try {
+    const updates = { ...req.body };
+    
+    // Don't allow password updates through this endpoint
+    if (updates.password) {
+      delete updates.password;
+    }
+    
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, updatedAt: Date.now() },
+      { ...updates, updatedAt: Date.now() },
       { new: true, runValidators: true }
-    );
+    ).select('-password');
+    
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
+    
     res.status(200).json(user);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -68,56 +87,97 @@ const deleteUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-// added signup and login logic 
-const signup = async (req, res,next) => {
+
+// Signup
+const signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    // Validate required fields
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    // Check if user exists
     const exists = await User.findOne({ $or: [{ email }, { username }] });
     if (exists) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
+    // Create user
     const user = new User({ username, email, password });
     await user.save();
 
+    // Generate token
     const token = jwt.sign(
       { id: user._id },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'fallback_secret_key',
       { expiresIn: '7d' }
     );
 
-    res.status(201).json({ user, token });
+    // Remove password from response
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.status(201).json({ user: userResponse, token });
   } catch (error) {
-    next(error);
+    res.status(400).json({ error: error.message });
   }
 };
-const login = async (req, res,next) => {
+
+// Login
+const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    // Find user
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Generate token
     const token = jwt.sign(
       { id: user._id },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'fallback_secret_key',
       { expiresIn: '7d' }
     );
 
-    res.status(200).json({ user, token });
+    // Remove password from response
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.status(200).json({ user: userResponse, token });
   } catch (error) {
-   next(error);
+    res.status(400).json({ error: error.message });
   }
 };
 
+// Get current user
+const getCurrentUser = async (req, res) => {
+  try {
+    // req.user is set by authenticateToken middleware
+    res.status(200).json(req.user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Logout (client-side - just returns success)
+const logout = async (req, res) => {
+  res.status(200).json({ message: 'Logged out successfully' });
+};
 
 module.exports = {
   getAllUsers,
@@ -126,7 +186,7 @@ module.exports = {
   updateUser,
   deleteUser,
   signup,
-  login
+  login,
+  getCurrentUser,
+  logout
 };
-
-
