@@ -18,7 +18,7 @@ const getAllUsers = async (req, res) => {
 // Get user by ID
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).populate('joinedCommunities');
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -135,6 +135,60 @@ const login = async (req, res,next) => {
   }
 };
 
+// Join a community
+const joinCommunity = async (req, res) => {
+  try {
+    const { userId, communityId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user is already in the community
+    if (user.joinedCommunities.includes(communityId)) {
+      return res.status(400).json({ error: 'User is already a member of this community' });
+    }
+
+    // Add community to user's joined communities
+    user.joinedCommunities.push(communityId);
+    await user.save();
+
+    await user.populate('joinedCommunities');
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Leave a community
+const leaveCommunity = async (req, res) => {
+  try {
+    const { userId, communityId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user is in the community
+    if (!user.joinedCommunities.includes(communityId)) {
+      return res.status(400).json({ error: 'User is not a member of this community' });
+    }
+
+    // Remove community from user's joined communities
+    user.joinedCommunities = user.joinedCommunities.filter(
+      id => id.toString() !== communityId
+    );
+    await user.save();
+
+    await user.populate('joinedCommunities');
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 
 module.exports = {
   getAllUsers,
@@ -144,7 +198,9 @@ module.exports = {
   deleteUser,
   searchUsers,
   signup,
-  login
+  login,
+  joinCommunity,
+  leaveCommunity
 };
 
 

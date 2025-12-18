@@ -36,6 +36,10 @@ const userSchema = new mongoose.Schema({
     maxlength: 500,
     default: ''
   },
+  joinedCommunities: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Community'
+  }],
   createdAt: {
     type: Date,
     default: Date.now

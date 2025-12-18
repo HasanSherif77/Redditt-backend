@@ -8,7 +8,9 @@ const {
   updateUser,
   deleteUser,
   signup,
-  login
+  login,
+  joinCommunity,
+  leaveCommunity
 } = require('./userController');
 
 //added paths for auth: 
@@ -33,6 +35,12 @@ router.patch('/:id', updateUser);
 
 // DELETE /api/users/:id - Delete user
 router.delete('/:id', deleteUser);
+
+// POST /api/users/:userId/communities/:communityId/join - Join a community
+router.post('/:userId/communities/:communityId/join', joinCommunity);
+
+// POST /api/users/:userId/communities/:communityId/leave - Leave a community
+router.post('/:userId/communities/:communityId/leave', leaveCommunity);
 
 module.exports = router;
 
