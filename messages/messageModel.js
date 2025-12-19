@@ -4,7 +4,9 @@ const messageSchema = new mongoose.Schema({
   content: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    minlength: 1,
+    maxlength: 1000
   },
   sender: {
     type: mongoose.Schema.Types.ObjectId,
@@ -30,5 +32,15 @@ const messageSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('Message', messageSchema);
+/* Update updatedAt on save */
+messageSchema.pre('save', function (next) {
+  this.updatedAt = Date.now();
+  next();
+});
 
+/* Indexes for better query performance */
+messageSchema.index({ sender: 1, createdAt: -1 });
+messageSchema.index({ receiver: 1, createdAt: -1 });
+messageSchema.index({ read: 1 });
+
+module.exports = mongoose.model('Message', messageSchema);
