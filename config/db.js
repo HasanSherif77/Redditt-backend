@@ -2,10 +2,13 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/reddit-clone', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/reddit-clone';
+    
+    if (!process.env.MONGODB_URI) {
+      console.log('⚠️  MONGODB_URI not found in .env, using default: mongodb://localhost:27017/reddit-clone');
+    }
+    
+    const conn = await mongoose.connect(mongoURI);
     
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     

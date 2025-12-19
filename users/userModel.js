@@ -53,22 +53,16 @@ const userSchema = new mongoose.Schema({
 });
 
 /* Hash password before save */
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+userSchema.pre('save', async function () {
+  if (!this.isModified('password')) return;
   
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 /* Update updatedAt on save */
-userSchema.pre('save', function (next) {
+userSchema.pre('save', function () {
   this.updatedAt = Date.now();
-  next();
 });
 
 /* Remove password from responses */

@@ -25,29 +25,42 @@ const getUserById = async (req, res) => {
   }
 };
 
-// Create new user (for admin or direct creation)
-const createUser = async (req, res) => {
+// Get displayname by user ID
+const getDisplayNameById = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    
-    // Check if user exists
-    const exists = await User.findOne({ $or: [{ email }, { username }] });
-    if (exists) {
-      return res.status(400).json({ error: 'User already exists' });
+    const user = await User.findById(req.params.id).select('displayname');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
-    
-    const user = new User({ username, email, password });
-    await user.save();
-    
-    // Remove password from response
-    const userResponse = user.toObject();
-    delete userResponse.password;
-    
-    res.status(201).json(userResponse);
+    res.status(200).json({ displayname: user.displayname });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
+
+// Create new user (for admin or direct creation)
+// const createUser = async (req, res) => {
+//   try {
+//     const { username, email, password } = req.body;
+    
+//     // Check if user exists
+//     const exists = await User.findOne({ $or: [{ email }, { username }] });
+//     if (exists) {
+//       return res.status(400).json({ error: 'User already exists' });
+//     }
+    
+//     const user = new User({ username, email, password });
+//     await user.save();
+    
+//     // Remove password from response
+//     const userResponse = user.toObject();
+//     delete userResponse.password;
+    
+//     res.status(201).json(userResponse);
+//   } catch (error) {
+//     res.status(400).json({ error: error.message });
+//   }
+// };
 
 // Search users by query string (matches username, displayname or email)
 const searchUsers = async (req, res) => {
@@ -66,7 +79,7 @@ const searchUsers = async (req, res) => {
   }
 };
 
-// Update user
+// Update user (current user can only update themselves)
 const updateUser = async (req, res) => {
   try {
     const updates = { ...req.body };
@@ -77,7 +90,7 @@ const updateUser = async (req, res) => {
     }
     
     const user = await User.findByIdAndUpdate(
-      req.params.id,
+      req.user._id,
       { ...updates, updatedAt: Date.now() },
       { new: true, runValidators: true }
     ).select('-password');
@@ -92,10 +105,10 @@ const updateUser = async (req, res) => {
   }
 };
 
-// Delete user
+// Delete user (current user can only delete themselves)
 const deleteUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const user = await User.findByIdAndDelete(req.user._id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -109,7 +122,7 @@ const deleteUser = async (req, res) => {
 const signup = async (req, res) => {
   try {
     const { username, email, password, displayname, avatarUrl, description } = req.body;
-
+    
     // Validate required fields
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -127,7 +140,7 @@ const signup = async (req, res) => {
     // Generate token
     const token = jwt.sign(
       { id: user._id },
-      process.env.JWT_SECRET || 'fallback_secret_key',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -166,7 +179,7 @@ const login = async (req, res) => {
     // Generate token
     const token = jwt.sign(
       { id: user._id },
-      process.env.JWT_SECRET || 'fallback_secret_key',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -194,12 +207,13 @@ const getCurrentUser = async (req, res) => {
 const logout = async (req, res) => {
   res.status(200).json({ message: 'Logged out successfully' });
 };
+
 // Join a community
 const joinCommunity = async (req, res) => {
   try {
-    const { userId, communityId } = req.params;
+    const { communityId } = req.params;
 
-    const user = await User.findById(userId);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -223,9 +237,9 @@ const joinCommunity = async (req, res) => {
 // Leave a community
 const leaveCommunity = async (req, res) => {
   try {
-    const { userId, communityId } = req.params;
+    const { communityId } = req.params;
 
-    const user = await User.findById(userId);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -252,7 +266,8 @@ const leaveCommunity = async (req, res) => {
 module.exports = {
   getAllUsers,
   getUserById,
-  createUser,
+  getDisplayNameById,
+  // createUser,
   updateUser,
   deleteUser,
   searchUsers,
@@ -264,6 +279,6 @@ module.exports = {
   leaveCommunity
 };
   
-};
+
 
 

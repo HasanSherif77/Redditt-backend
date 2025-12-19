@@ -7,21 +7,22 @@ const {
   updateNotification,
   deleteNotification
 } = require('./notificationController');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
 // GET /api/notifications - Get all notifications
-router.get('/', getAllNotifications);
+router.get('/', authenticateToken, getAllNotifications);
 
 // GET /api/notifications/:id - Get notification by ID
-router.get('/:id', getNotificationById);
+router.get('/me', authenticateToken, getNotificationById);
 
 // POST /api/notifications - Create new notification
-router.post('/', createNotification);
+router.post('/', authenticateToken, createNotification);
 
 // PATCH /api/notifications/:id - Update notification
-router.patch('/:id', updateNotification);
+router.patch('/me', authenticateToken, updateNotification); 
 
 // DELETE /api/notifications/:id - Delete notification
-router.delete('/:id', deleteNotification);
+router.delete('/me', authenticateToken, deleteNotification);
 
 module.exports = router;
 

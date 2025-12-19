@@ -10,7 +10,7 @@ const postSchema = new mongoose.Schema(
     communityId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Community",
-      required: true
+      default: null
     },
     title: {
       type: String,

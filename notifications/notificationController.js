@@ -1,9 +1,9 @@
 const Notification = require('./notificationModel');
 
-// Get all notifications
+// Get all notifications for the current user
 const getAllNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find()
+    const notifications = await Notification.find({ user: req.user._id })
       .populate('user')
       .populate('relatedUser')
       .populate('relatedPost')
@@ -17,7 +17,7 @@ const getAllNotifications = async (req, res) => {
 // Get notification by ID
 const getNotificationById = async (req, res) => {
   try {
-    const notification = await Notification.findById(req.params.id)
+    const notification = await Notification.find({ user: req.user._id })
       .populate('user')
       .populate('relatedUser')
       .populate('relatedPost')
@@ -34,7 +34,10 @@ const getNotificationById = async (req, res) => {
 // Create new notification
 const createNotification = async (req, res) => {
   try {
-    const notification = new Notification(req.body);
+    const notification = new Notification({
+      ...req.body,
+      user: req.user._id
+    });
     await notification.save();
     await notification.populate('user');
     await notification.populate('relatedUser');

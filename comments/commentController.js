@@ -1,11 +1,9 @@
 const Comment = require('./commentModel');
 
-// Get all comments for a specific user
+// Get all comments for the current user
 const getAllUserComments = async (req, res) => {
   try {
-    const { userId } = req.params;
-    
-    const comments = await Comment.find({ userId })
+    const comments = await Comment.find({ userId: req.user._id })
       .populate('userId')
       .populate('postId')
       .populate('parentComment');
@@ -49,7 +47,10 @@ const getCommentById = async (req, res) => {
 // Create new comment
 const createComment = async (req, res) => {
   try {
-    const comment = new Comment(req.body);
+    const comment = new Comment({
+      ...req.body,
+      userId: req.user._id
+    });
     await comment.save();
     await comment.populate('userId');
     await comment.populate('postId');

@@ -28,7 +28,10 @@ const getPostById = async (req, res) => {
 // Create new post
 const createPost = async (req, res) => {
   try {
-    const post = new Post(req.body);
+    const post = new Post({
+      ...req.body,
+      userId: req.user._id
+    });
     await post.save();
     await post.populate('userId');
     await post.populate('communityId');
@@ -106,11 +109,10 @@ const downvotePost = async (req, res) => {
   }
 };
 
-// Get all posts by a specific user
+// Get all posts by the current user
 const getPostsByUser = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const posts = await Post.find({ userId }).populate('userId').populate('communityId');
+    const posts = await Post.find({ userId: req.user._id }).populate('userId').populate('communityId');
     res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -3,25 +3,30 @@ const router = express.Router();
 const {
   getAllCommunities,
   getCommunityById,
+  getCommunityNameById,
   createCommunity,
   updateCommunity,
   deleteCommunity
 } = require('./communityController');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
 // GET /api/communities - Get all communities
-router.get('/', getAllCommunities);
+router.get('/', authenticateToken, getAllCommunities);
+
+// GET /api/communities/name/:id - Get community name by community ID
+router.get('/name/:id', authenticateToken, getCommunityNameById);
 
 // GET /api/communities/:id - Get community by ID
-router.get('/:id', getCommunityById);
+router.get('/me', authenticateToken, getCommunityById);
 
 // POST /api/communities - Create new community
-router.post('/', createCommunity);
+router.post('/', authenticateToken, createCommunity);
 
 // PATCH /api/communities/:id - Update community
-router.patch('/:id', updateCommunity);
+router.patch('/', authenticateToken, updateCommunity);
 
 // DELETE /api/communities/:id - Delete community
-router.delete('/:id', deleteCommunity);
+router.delete('/', authenticateToken, deleteCommunity);
 
 module.exports = router;
 

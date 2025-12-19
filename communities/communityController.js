@@ -13,13 +13,26 @@ const getAllCommunities = async (req, res) => {
 // Get community by ID
 const getCommunityById = async (req, res) => {
   try {
-    const community = await Community.findById(req.params.id);
+    const community = await Community.findById(req.user._id);
 
     if (!community) {
       return res.status(404).json({ error: 'Community not found' });
     }
 
     res.status(200).json(community);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get community name by community ID
+const getCommunityNameById = async (req, res) => {
+  try {
+    const community = await Community.findById(req.params.id).select('communityName');
+    if (!community) {
+      return res.status(404).json({ error: 'Community not found' });
+    }
+    res.status(200).json({ communityName: community.communityName });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -45,7 +58,7 @@ const createCommunity = async (req, res) => {
 const updateCommunity = async (req, res) => {
   try {
     const community = await Community.findByIdAndUpdate(
-      req.params.id,
+      req.user._id,
       { ...req.body },
       { new: true, runValidators: true }
     );
@@ -63,7 +76,7 @@ const updateCommunity = async (req, res) => {
 // Delete community
 const deleteCommunity = async (req, res) => {
   try {
-    const community = await Community.findByIdAndDelete(req.params.id);
+    const community = await Community.findByIdAndDelete(req.user._id);
 
     if (!community) {
       return res.status(404).json({ error: 'Community not found' });
@@ -78,6 +91,7 @@ const deleteCommunity = async (req, res) => {
 module.exports = {
   getAllCommunities,
   getCommunityById,
+  getCommunityNameById,
   createCommunity,
   updateCommunity,
   deleteCommunity

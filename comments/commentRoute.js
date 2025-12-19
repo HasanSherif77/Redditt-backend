@@ -8,24 +8,25 @@ const {
   updateComment,
   deleteComment
 } = require('./commentController');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
-// GET /comments/user/:userId - Get all comments for a specific user
-router.get('/user/:userId', getAllUserComments);
+// GET /comments/me - Get all comments for the current user
+router.get('/me', authenticateToken, getAllUserComments);
 
 // GET /comments/post/:postId - Get all comments for a specific post
-router.get('/post/:postId', getAllPostComments);
+router.get('/post/:postId', authenticateToken, getAllPostComments);
 
 // GET /comments/:id - Get comment by ID
-router.get('/:id', getCommentById);
+router.get('/:id', authenticateToken, getCommentById);
 
 // POST /api/comments - Create new comment
-router.post('/', createComment);
+router.post('/', authenticateToken, createComment);
 
 // PATCH /api/comments/:id - Update comment
-router.patch('/:id', updateComment);
+router.patch('/:id', authenticateToken, updateComment);
 
 // DELETE /api/comments/:id - Delete comment
-router.delete('/:id', deleteComment);
+router.delete('/:id', authenticateToken, deleteComment);
 
 module.exports = router;
 

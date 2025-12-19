@@ -11,33 +11,34 @@ const {
   getPostsByUser,
   getPostsByCommunity
 } = require('./postController');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
 // GET /api/posts - Get all posts
 router.get('/', getAllPosts);
 
-// GET /api/posts/user/:userId - Get all posts by a specific user
-router.get('/user/:userId', getPostsByUser);
+// GET /api/posts/me - Get all posts by the current user
+router.get('/me', authenticateToken, getPostsByUser);
 
 // GET /api/posts/community/:communityId - Get all posts in a specific community
-router.get('/community/:communityId', getPostsByCommunity);
+router.get('/community/:communityId', authenticateToken, getPostsByCommunity);
 
 // GET /api/posts/:id - Get post by ID
-router.get('/:id', getPostById);
+router.get('/:id', authenticateToken, getPostById);
 
 // POST /api/posts - Create new post
-router.post('/', createPost);
+router.post('/', authenticateToken, createPost);
 
 // PATCH /api/posts/:id - Update post
-router.patch('/:id', updatePost);
+router.patch('/:id', authenticateToken, updatePost);
 
 // DELETE /api/posts/:id - Delete post
-router.delete('/:id', deletePost);
+router.delete('/:id', authenticateToken, deletePost);
 
 // POST /api/posts/:id/upvote - Upvote a post
-router.post('/:id/upvote', upvotePost);
+router.post('/:id/upvote', authenticateToken, upvotePost);
 
 // POST /api/posts/:id/downvote - Downvote a post
-router.post('/:id/downvote', downvotePost);
+router.post('/:id/downvote', authenticateToken, downvotePost);
 
 
 

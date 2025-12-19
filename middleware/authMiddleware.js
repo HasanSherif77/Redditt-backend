@@ -13,7 +13,7 @@ const authenticateToken = async (req, res, next) => {
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Find user and attach to request
     const user = await User.findById(decoded.id).select('-password');
@@ -36,28 +36,28 @@ const authenticateToken = async (req, res, next) => {
 };
 
 // Middleware to check if user owns the resource
-const authorizeUser = (resourceField = '_id') => async (req, res, next) => {
-  try {
-    const resourceId = req.params.id;
+// const authorizeUser = (resourceField = '_id') => async (req, res, next) => {
+//   try {
+//     const resourceId = req.params.id;
     
-    if (!resourceId) {
-      return res.status(400).json({ error: 'Resource ID not provided' });
-    }
+//     if (!resourceId) {
+//       return res.status(400).json({ error: 'Resource ID not provided' });
+//     }
 
-    // Check if user is the owner
-    if (req.user._id.toString() !== resourceId.toString()) {
-      return res.status(403).json({ 
-        error: 'Forbidden. You are not authorized to access this resource.' 
-      });
-    }
+//     // Check if user is the owner
+//     if (req.user._id.toString() !== resourceId.toString()) {
+//       return res.status(403).json({ 
+//         error: 'Forbidden. You are not authorized to access this resource.' 
+//       });
+//     }
 
-    next();
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+//     next();
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 
 module.exports = {
-  authenticateToken,
-  authorizeUser
+  authenticateToken
+  // authorizeUser
 };
