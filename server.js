@@ -17,6 +17,7 @@ const postRoutes = require('./posts/postRoute');
 const messageRoutes = require('./messages/messageRoute');
 const communityRoutes = require('./communities/communityRoute');
 const notificationRoutes = require('./notifications/notificationRoute');
+const aiRoutes = require('./AI/aiRoute');
 
 // Mount routes
 app.use('/users', userRoutes);
@@ -25,6 +26,6 @@ app.use('/posts', postRoutes);
 app.use('/messages', messageRoutes);
 app.use('/communities', communityRoutes);
 app.use('/notifications', notificationRoutes);
-
+app.use('/ai', aiRoutes);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
