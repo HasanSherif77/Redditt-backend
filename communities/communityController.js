@@ -3,9 +3,7 @@ const Community = require('./communityModel');
 // Get all communities
 const getAllCommunities = async (req, res) => {
   try {
-    const communities = await Community.find()
-      .populate('creator')
-      .populate('members');
+    const communities = await Community.find();
     res.status(200).json(communities);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -15,12 +13,12 @@ const getAllCommunities = async (req, res) => {
 // Get community by ID
 const getCommunityById = async (req, res) => {
   try {
-    const community = await Community.findById(req.params.id)
-      .populate('creator')
-      .populate('members');
+    const community = await Community.findById(req.params.id);
+
     if (!community) {
       return res.status(404).json({ error: 'Community not found' });
     }
+
     res.status(200).json(community);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -30,10 +28,13 @@ const getCommunityById = async (req, res) => {
 // Create new community
 const createCommunity = async (req, res) => {
   try {
-    const community = new Community(req.body);
-    await community.save();
-    await community.populate('creator');
-    await community.populate('members');
+    const community = await Community.create({
+      communityName: req.body.communityName,
+      communityDescription: req.body.communityDescription,
+      communityIcon: req.body.communityIcon || '',
+      communityBanner: req.body.communityBanner || ''
+    });
+
     res.status(201).json(community);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -45,12 +46,14 @@ const updateCommunity = async (req, res) => {
   try {
     const community = await Community.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, updatedAt: Date.now() },
+      { ...req.body },
       { new: true, runValidators: true }
-    ).populate('creator').populate('members');
+    );
+
     if (!community) {
       return res.status(404).json({ error: 'Community not found' });
     }
+
     res.status(200).json(community);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -61,9 +64,11 @@ const updateCommunity = async (req, res) => {
 const deleteCommunity = async (req, res) => {
   try {
     const community = await Community.findByIdAndDelete(req.params.id);
+
     if (!community) {
       return res.status(404).json({ error: 'Community not found' });
     }
+
     res.status(200).json({ message: 'Community deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -77,4 +82,3 @@ module.exports = {
   updateCommunity,
   deleteCommunity
 };
-

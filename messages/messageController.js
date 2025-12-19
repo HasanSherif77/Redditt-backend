@@ -87,10 +87,7 @@ const updateMessage = async (req, res) => {
     
     const message = await Message.findByIdAndUpdate(
       req.params.id,
-      { 
-        content,
-        updatedAt: Date.now() 
-      },
+      { ...req.body },
       { new: true, runValidators: true }
     )
     .populate('sender', 'username email')

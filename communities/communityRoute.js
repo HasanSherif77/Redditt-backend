@@ -17,8 +17,8 @@ router.get('/:id', getCommunityById);
 // POST /api/communities - Create new community
 router.post('/', createCommunity);
 
-// PUT /api/communities/:id - Update community
-router.put('/:id', updateCommunity);
+// PATCH /api/communities/:id - Update community
+router.patch('/:id', updateCommunity);
 
 // DELETE /api/communities/:id - Delete community
 router.delete('/:id', deleteCommunity);

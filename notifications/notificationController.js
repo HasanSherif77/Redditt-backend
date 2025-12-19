@@ -51,7 +51,7 @@ const updateNotification = async (req, res) => {
   try {
     const notification = await Notification.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { ...req.body },
       { new: true, runValidators: true }
     )
       .populate('user')

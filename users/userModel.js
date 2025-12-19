@@ -22,6 +22,26 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
+  displayname: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  avatarUrl: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  description: {
+    type: String,
+    trim: true,
+    maxlength: 500,
+    default: ''
+  },
+  joinedCommunities: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Community'
+  }],
   createdAt: {
     type: Date,
     default: Date.now

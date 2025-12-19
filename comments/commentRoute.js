@@ -1,24 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getAllComments,
+  getAllUserComments,
+  getAllPostComments,
   getCommentById,
   createComment,
   updateComment,
   deleteComment
 } = require('./commentController');
 
-// GET /api/comments - Get all comments
-router.get('/', getAllComments);
+// GET /comments/user/:userId - Get all comments for a specific user
+router.get('/user/:userId', getAllUserComments);
 
-// GET /api/comments/:id - Get comment by ID
+// GET /comments/post/:postId - Get all comments for a specific post
+router.get('/post/:postId', getAllPostComments);
+
+// GET /comments/:id - Get comment by ID
 router.get('/:id', getCommentById);
 
 // POST /api/comments - Create new comment
 router.post('/', createComment);
 
-// PUT /api/comments/:id - Update comment
-router.put('/:id', updateComment);
+// PATCH /api/comments/:id - Update comment
+router.patch('/:id', updateComment);
 
 // DELETE /api/comments/:id - Delete comment
 router.delete('/:id', deleteComment);

@@ -1,9 +1,29 @@
 const Comment = require('./commentModel');
 
-// Get all comments
-const getAllComments = async (req, res) => {
+// Get all comments for a specific user
+const getAllUserComments = async (req, res) => {
   try {
-    const comments = await Comment.find().populate('author').populate('post');
+    const { userId } = req.params;
+    
+    const comments = await Comment.find({ userId })
+      .populate('userId')
+      .populate('postId')
+      .populate('parentComment');
+    res.status(200).json(comments);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get all comments for a specific post
+const getAllPostComments = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    
+    const comments = await Comment.find({ postId })
+      .populate('userId')
+      .populate('postId')
+      .populate('parentComment');
     res.status(200).json(comments);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -14,8 +34,9 @@ const getAllComments = async (req, res) => {
 const getCommentById = async (req, res) => {
   try {
     const comment = await Comment.findById(req.params.id)
-      .populate('author')
-      .populate('post');
+      .populate('userId')
+      .populate('postId')
+      .populate('parentComment');
     if (!comment) {
       return res.status(404).json({ error: 'Comment not found' });
     }
@@ -30,8 +51,9 @@ const createComment = async (req, res) => {
   try {
     const comment = new Comment(req.body);
     await comment.save();
-    await comment.populate('author');
-    await comment.populate('post');
+    await comment.populate('userId');
+    await comment.populate('postId');
+    await comment.populate('parentComment');
     res.status(201).json(comment);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -43,9 +65,12 @@ const updateComment = async (req, res) => {
   try {
     const comment = await Comment.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, updatedAt: Date.now() },
+      { ...req.body },
       { new: true, runValidators: true }
-    ).populate('author').populate('post');
+    )
+      .populate('userId')
+      .populate('postId')
+      .populate('parentComment');
     if (!comment) {
       return res.status(404).json({ error: 'Comment not found' });
     }
@@ -69,7 +94,8 @@ const deleteComment = async (req, res) => {
 };
 
 module.exports = {
-  getAllComments,
+  getAllUserComments,
+  getAllPostComments,
   getCommentById,
   createComment,
   updateComment,
