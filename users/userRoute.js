@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
    getUserById,
-   getDisplayNameById,
+   getUserInfoById,
    searchUsers,
    // createUser,
    updateUser,
@@ -39,7 +39,7 @@ router.get('/search', authenticateToken, searchUsers);
 router.get('/', authenticateToken, getAllUsers);
 
 // GET /api/users/username/:id - Get username by user ID
-router.get('/displayname/:id', authenticateToken, getDisplayNameById);
+router.get('/info/:id', authenticateToken, getUserInfoById);
 
 // Get user by ID (protected)
 router.get('/:id', authenticateToken, getUserById);

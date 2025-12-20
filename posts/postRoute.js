@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getAllPosts,
+  getMyFeed,
   getPostById,
   createPost,
   updatePost,
@@ -13,8 +13,8 @@ const {
 } = require('./postController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 
-// GET /api/posts - Get all posts
-router.get('/', getAllPosts);
+// GET /api/posts - Get my feed
+router.get('/', authenticateToken, getMyFeed);
 
 // GET /api/posts/me - Get all posts by the current user
 router.get('/me', authenticateToken, getPostsByUser);

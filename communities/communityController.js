@@ -1,4 +1,5 @@
 const Community = require('./communityModel');
+const User = require('../users/userModel');
 
 // Get all communities
 const getAllCommunities = async (req, res) => {
@@ -10,29 +11,32 @@ const getAllCommunities = async (req, res) => {
   }
 };
 
-// Get community by ID
+// Get joined communities for the current user
 const getCommunityById = async (req, res) => {
   try {
-    const community = await Community.findById(req.user._id);
-
-    if (!community) {
-      return res.status(404).json({ error: 'Community not found' });
+    const user = await User.findById(req.user._id).populate('joinedCommunities');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    res.status(200).json(community);
+    res.status(200).json(user.joinedCommunities);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Get community name by community ID
-const getCommunityNameById = async (req, res) => {
+// Get community info (name and icon) by community ID
+const getCommunityInfoById = async (req, res) => {
   try {
-    const community = await Community.findById(req.params.id).select('communityName');
+    const community = await Community.findById(req.params.id).select('communityName communityIcon');
     if (!community) {
       return res.status(404).json({ error: 'Community not found' });
     }
-    res.status(200).json({ communityName: community.communityName });
+    res.status(200).json({ 
+      communityName: community.communityName,
+      communityIcon: community.communityIcon
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -91,7 +95,7 @@ const deleteCommunity = async (req, res) => {
 module.exports = {
   getAllCommunities,
   getCommunityById,
-  getCommunityNameById,
+  getCommunityInfoById,
   createCommunity,
   updateCommunity,
   deleteCommunity

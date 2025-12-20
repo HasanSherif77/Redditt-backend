@@ -1,4 +1,6 @@
 const Comment = require('./commentModel');
+const Post = require('../posts/postModel');
+const Notification = require('../notifications/notificationModel');
 
 // Get all comments for the current user
 const getAllUserComments = async (req, res) => {
@@ -52,6 +54,29 @@ const createComment = async (req, res) => {
       userId: req.user._id
     });
     await comment.save();
+    
+    // Get the post to find the post owner
+    const post = await Post.findById(comment.postId);
+    
+    // Increment post commentsCount only if parentComment is null (direct comment on post)
+    if (!comment.parentComment) {
+      await Post.findByIdAndUpdate(
+        comment.postId,
+        { $inc: { commentsCount: 1 } }
+      );
+    }
+    
+    // Create notification for post owner (don't notify if commenting on own post)
+    if (post && post.userId.toString() !== req.user._id.toString()) {
+      await Notification.create({
+        type: comment.parentComment ? 'reply' : 'comment',
+        user: post.userId,
+        relatedUser: req.user._id,
+        relatedPost: comment.postId,
+        relatedComment: comment._id
+      });
+    }
+    
     await comment.populate('userId');
     await comment.populate('postId');
     await comment.populate('parentComment');
@@ -94,12 +119,82 @@ const deleteComment = async (req, res) => {
   }
 };
 
+// Upvote comment (increments votes)
+const upvoteComment = async (req, res) => {
+  try {
+    const comment = await Comment.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { votes: 1 } },
+      { new: true }
+    )
+      .populate('userId')
+      .populate('postId')
+      .populate('parentComment');
+
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    // Create notification for comment owner (don't notify if upvoting own comment)
+    // Handle both populated (object) and unpopulated (ObjectId) userId
+    const commentOwnerId = comment.userId._id ? comment.userId._id.toString() : comment.userId.toString();
+    if (commentOwnerId !== req.user._id.toString()) {
+      await Notification.create({
+        type: 'upvote',
+        user: comment.userId._id || comment.userId,
+        relatedUser: req.user._id,
+        relatedComment: comment._id,
+        relatedPost: comment.postId
+      });
+    }
+
+    res.status(200).json(comment);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Downvote comment (decrements votes, not below 0)
+const downvoteComment = async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    comment.votes = Math.max(0, (comment.votes || 0) - 1);
+    await comment.save();
+    await comment.populate('userId');
+    await comment.populate('postId');
+    await comment.populate('parentComment');
+
+    // Create notification for comment owner (don't notify if downvoting own comment)
+    // Handle both populated (object) and unpopulated (ObjectId) userId
+    const commentOwnerId = comment.userId._id ? comment.userId._id.toString() : comment.userId.toString();
+    if (commentOwnerId !== req.user._id.toString()) {
+      await Notification.create({
+        type: 'downvote',
+        user: comment.userId._id || comment.userId,
+        relatedUser: req.user._id,
+        relatedComment: comment._id,
+        relatedPost: comment.postId
+      });
+    }
+
+    res.status(200).json(comment);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getAllUserComments,
   getAllPostComments,
   getCommentById,
   createComment,
   updateComment,
-  deleteComment
+  deleteComment,
+  upvoteComment,
+  downvoteComment
 };
 

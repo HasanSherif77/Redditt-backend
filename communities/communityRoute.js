@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   getAllCommunities,
   getCommunityById,
-  getCommunityNameById,
+  getCommunityInfoById,
   createCommunity,
   updateCommunity,
   deleteCommunity
@@ -14,7 +14,7 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 router.get('/', authenticateToken, getAllCommunities);
 
 // GET /api/communities/name/:id - Get community name by community ID
-router.get('/name/:id', authenticateToken, getCommunityNameById);
+router.get('/info/:id', authenticateToken, getCommunityInfoById);
 
 // GET /api/communities/:id - Get community by ID
 router.get('/me', authenticateToken, getCommunityById);

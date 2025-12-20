@@ -1,4 +1,5 @@
 const User = require('./userModel');
+const Community = require('../communities/communityModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -25,14 +26,19 @@ const getUserById = async (req, res) => {
   }
 };
 
-// Get displayname by user ID
-const getDisplayNameById = async (req, res) => {
+// Get user info (displayname, username, avatarUrl) by user ID
+const getUserInfoById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('displayname');
+    const user = await User.findById(req.params.id).select('displayname username avatarUrl');
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.status(200).json({ displayname: user.displayname });
+    res.status(200).json({ 
+      displayname: user.displayname,
+      username: user.username,
+      avatarUrl: user.avatarUrl,
+      joinedCommunities: user.joinedCommunities,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -227,6 +233,12 @@ const joinCommunity = async (req, res) => {
     user.joinedCommunities.push(communityId);
     await user.save();
 
+    // Increment community members count
+    await Community.findByIdAndUpdate(
+      communityId,
+      { $inc: { communityMembersCount: 1 } }
+    );
+
     await user.populate('joinedCommunities');
     res.status(200).json(user);
   } catch (error) {
@@ -255,6 +267,13 @@ const leaveCommunity = async (req, res) => {
     );
     await user.save();
 
+    // Decrement community members count (ensure it doesn't go below 0)
+    const community = await Community.findById(communityId);
+    if (community) {
+      community.communityMembersCount = Math.max(0, (community.communityMembersCount || 0) - 1);
+      await community.save();
+    }
+
     await user.populate('joinedCommunities');
     res.status(200).json(user);
   } catch (error) {
@@ -266,7 +285,7 @@ const leaveCommunity = async (req, res) => {
 module.exports = {
   getAllUsers,
   getUserById,
-  getDisplayNameById,
+  getUserInfoById,
   // createUser,
   updateUser,
   deleteUser,

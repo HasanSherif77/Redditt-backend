@@ -6,7 +6,9 @@ const {
   getCommentById,
   createComment,
   updateComment,
-  deleteComment
+  deleteComment,
+  upvoteComment,
+  downvoteComment
 } = require('./commentController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 
@@ -27,6 +29,12 @@ router.patch('/:id', authenticateToken, updateComment);
 
 // DELETE /api/comments/:id - Delete comment
 router.delete('/:id', authenticateToken, deleteComment);
+
+// POST /api/comments/:id/upvote - Upvote a comment
+router.post('/:id/upvote', authenticateToken, upvoteComment);
+
+// POST /api/comments/:id/downvote - Downvote a comment
+router.post('/:id/downvote', authenticateToken, downvoteComment);
 
 module.exports = router;
 

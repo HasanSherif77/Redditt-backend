@@ -1,10 +1,38 @@
 const Post = require('./postModel');
+const Notification = require('../notifications/notificationModel');
+const User = require('../users/userModel');
 
-// Get all posts
-const getAllPosts = async (req, res) => {
+// Get my feed (custom posts: joined communities first, then rest)
+const getMyFeed = async (req, res) => {
   try {
-    const posts = await Post.find().populate('userId').populate('communityId');
-    res.status(200).json(posts);
+    // Get user's joined communities
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const joinedCommunityIds = user.joinedCommunities || [];
+
+    // Get posts from joined communities, sorted by createdAt (newest first)
+    const joinedCommunityPosts = await Post.find({
+      communityId: { $in: joinedCommunityIds }
+    })
+      .populate('userId')
+      .populate('communityId')
+      .sort({ createdAt: -1 });
+
+    // Get posts from communities user hasn't joined
+    const otherPosts = await Post.find({
+      communityId: { $nin: joinedCommunityIds }
+    })
+      .populate('userId')
+      .populate('communityId')
+      .sort({ createdAt: -1 });
+
+    // Combine: joined community posts first, then rest
+    const customFeed = [...joinedCommunityPosts, ...otherPosts];
+
+    res.status(200).json(customFeed);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -84,6 +112,18 @@ const upvotePost = async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
 
+    // Create notification for post owner (don't notify if upvoting own post)
+    // Handle both populated (object) and unpopulated (ObjectId) userId
+    const postOwnerId = post.userId._id ? post.userId._id.toString() : post.userId.toString();
+    if (postOwnerId !== req.user._id.toString()) {
+      await Notification.create({
+        type: 'upvote',
+        user: post.userId._id || post.userId,
+        relatedUser: req.user._id,
+        relatedPost: post._id
+      });
+    }
+
     res.status(200).json(post);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -102,6 +142,18 @@ const downvotePost = async (req, res) => {
     await post.save();
     await post.populate('userId');
     await post.populate('communityId');
+
+    // Create notification for post owner (don't notify if downvoting own post)
+    // Handle both populated (object) and unpopulated (ObjectId) userId
+    const postOwnerId = post.userId._id ? post.userId._id.toString() : post.userId.toString();
+    if (postOwnerId !== req.user._id.toString()) {
+      await Notification.create({
+        type: 'downvote',
+        user: post.userId._id || post.userId,
+        relatedUser: req.user._id,
+        relatedPost: post._id
+      });
+    }
 
     res.status(200).json(post);
   } catch (error) {
@@ -131,7 +183,7 @@ const getPostsByCommunity = async (req, res) => {
 };
 
 module.exports = {
-  getAllPosts,
+  getMyFeed,
   getPostById,
   createPost,
   updatePost,
