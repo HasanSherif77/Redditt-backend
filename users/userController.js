@@ -71,13 +71,12 @@ const getUserInfoById = async (req, res) => {
 // Search users by query string (matches username, displayname or email)
 const searchUsers = async (req, res) => {
   try {
-    const q = req.query.q;
+    const q = req.params.query;
     if (!q) return res.status(400).json({ error: 'Query parameter q is required' });
-
     const regex = new RegExp(q, 'i');
     const users = await User.find({
       $or: [{ username: regex }, { displayname: regex }, { email: regex }]
-    });
+    }).select('-password'); // Exclude password from results
 
     res.status(200).json(users);
   } catch (error) {

@@ -11,6 +11,22 @@ const getAllCommunities = async (req, res) => {
   }
 };
 
+// Search communities by query string (matches communityName or communityDescription)
+const searchCommunities = async (req, res) => {
+  try {
+    const q = req.params.query;
+    if (!q) return res.status(400).json({ error: 'Query parameter q is required' });
+    const regex = new RegExp(q, 'i');
+    const communities = await Community.find({
+      $or: [{ communityName: regex }, { communityDescription: regex }]
+    });
+
+    res.status(200).json(communities);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Get joined communities for the current user
 const getCommunityById = async (req, res) => {
   try {
@@ -98,5 +114,6 @@ module.exports = {
   getCommunityInfoById,
   createCommunity,
   updateCommunity,
-  deleteCommunity
+  deleteCommunity,
+  searchCommunities
 };

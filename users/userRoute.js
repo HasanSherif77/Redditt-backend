@@ -32,7 +32,7 @@ router.post('/logout', logout);
 // Get current user profile
 router.get('/me', authenticateToken, getCurrentUser);
 // GET /api/users/search?q=... - Search users by letters
-router.get('/search', authenticateToken, searchUsers);
+router.get('/search/:query', authenticateToken, searchUsers);
 
 
 // Get all users (protected)

@@ -171,6 +171,20 @@ const getPostsByUser = async (req, res) => {
   }
 };
 
+// Get all posts by a specific user (by userId)
+const getPostsByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const posts = await Post.find({ userId })
+      .populate('userId')
+      .populate('communityId')
+      .sort({ createdAt: -1 }); // Sort by newest first
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Get all posts in a specific community
 const getPostsByCommunity = async (req, res) => {
   try {
@@ -191,6 +205,7 @@ module.exports = {
   upvotePost,
   downvotePost,
   getPostsByUser,
+  getPostsByUserId,
   getPostsByCommunity
 };
 

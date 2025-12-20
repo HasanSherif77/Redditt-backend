@@ -6,12 +6,16 @@ const {
   getCommunityInfoById,
   createCommunity,
   updateCommunity,
-  deleteCommunity
+  deleteCommunity,
+  searchCommunities
 } = require('./communityController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 
 // GET /api/communities - Get all communities
 router.get('/', authenticateToken, getAllCommunities);
+
+// GET /api/communities/search/:query - Search communities by letters
+router.get('/search/:query', authenticateToken, searchCommunities);
 
 // GET /api/communities/name/:id - Get community name by community ID
 router.get('/info/:id', authenticateToken, getCommunityInfoById);

@@ -9,6 +9,7 @@ const {
   upvotePost, 
   downvotePost,
   getPostsByUser,
+  getPostsByUserId,
   getPostsByCommunity
 } = require('./postController');
 const { authenticateToken } = require('../middleware/authMiddleware');
@@ -21,6 +22,9 @@ router.get('/me', authenticateToken, getPostsByUser);
 
 // GET /api/posts/community/:communityId - Get all posts in a specific community
 router.get('/community/:communityId', authenticateToken, getPostsByCommunity);
+
+// GET /api/posts/user/:userId - Get all posts by a specific user
+router.get('/user/:userId', authenticateToken, getPostsByUserId);
 
 // GET /api/posts/:id - Get post by ID
 router.get('/:id', authenticateToken, getPostById);
