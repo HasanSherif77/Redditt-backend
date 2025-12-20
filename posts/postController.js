@@ -3,12 +3,29 @@ const Notification = require('../notifications/notificationModel');
 const User = require('../users/userModel');
 
 // Get my feed (custom posts: joined communities first, then rest)
+// If authenticated: returns custom feed (joined communities first)
+// If not authenticated: returns all posts sorted by date
 const getMyFeed = async (req, res) => {
   try {
+    // If user is not authenticated, return all posts
+    if (!req.user || !req.user._id) {
+      const allPosts = await Post.find()
+        .populate('userId')
+        .populate('communityId')
+        .sort({ createdAt: -1 }); // Sort by newest first
+      return res.status(200).json(allPosts);
+    }
+
+    // User is authenticated - return custom feed
     // Get user's joined communities
     const user = await User.findById(req.user._id);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      // If user not found, fallback to all posts
+      const allPosts = await Post.find()
+        .populate('userId')
+        .populate('communityId')
+        .sort({ createdAt: -1 });
+      return res.status(200).json(allPosts);
     }
 
     const joinedCommunityIds = user.joinedCommunities || [];
@@ -116,8 +133,10 @@ const upvotePost = async (req, res) => {
     // Handle both populated (object) and unpopulated (ObjectId) userId
     const postOwnerId = post.userId._id ? post.userId._id.toString() : post.userId.toString();
     if (postOwnerId !== req.user._id.toString()) {
+      const relatedUser = await User.findById(req.user._id).select('username');
       await Notification.create({
         type: 'upvote',
+        action: `${relatedUser.username} upvoted your post`,
         user: post.userId._id || post.userId,
         relatedUser: req.user._id,
         relatedPost: post._id
@@ -147,8 +166,10 @@ const downvotePost = async (req, res) => {
     // Handle both populated (object) and unpopulated (ObjectId) userId
     const postOwnerId = post.userId._id ? post.userId._id.toString() : post.userId.toString();
     if (postOwnerId !== req.user._id.toString()) {
+      const relatedUser = await User.findById(req.user._id).select('username');
       await Notification.create({
         type: 'downvote',
+        action: `${relatedUser.username} downvoted your post`,
         user: post.userId._id || post.userId,
         relatedUser: req.user._id,
         relatedPost: post._id
@@ -196,6 +217,25 @@ const getPostsByCommunity = async (req, res) => {
   }
 };
 
+// Search posts by query string (matches title or body)
+const searchPosts = async (req, res) => {
+  try {
+    const q = req.params.query;
+    if (!q) return res.status(400).json({ error: 'Query parameter q is required' });
+    const regex = new RegExp(q, 'i');
+    const posts = await Post.find({
+      $or: [{ title: regex }, { body: regex }]
+    })
+      .populate('userId')
+      .populate('communityId')
+      .sort({ createdAt: -1 }); // Sort by newest first
+
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getMyFeed,
   getPostById,
@@ -206,6 +246,7 @@ module.exports = {
   downvotePost,
   getPostsByUser,
   getPostsByUserId,
-  getPostsByCommunity
+  getPostsByCommunity,
+  searchPosts
 };
 

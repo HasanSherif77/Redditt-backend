@@ -8,7 +8,8 @@ const {
   updateComment,
   deleteComment,
   upvoteComment,
-  downvoteComment
+  downvoteComment,
+  searchComments
 } = require('./commentController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 
@@ -17,6 +18,9 @@ router.get('/me', authenticateToken, getAllUserComments);
 
 // GET /comments/post/:postId - Get all comments for a specific post
 router.get('/post/:postId', authenticateToken, getAllPostComments);
+
+// GET /comments/search/:query - Search comments by letters
+router.get('/search/:query', authenticateToken, searchComments);
 
 // GET /comments/:id - Get comment by ID
 router.get('/:id', authenticateToken, getCommentById);

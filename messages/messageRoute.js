@@ -36,7 +36,10 @@ const checkMessageOwnership = async (req, res, next) => {
    PROTECTED ROUTES
 ===================== */
 
-// Get all messages for current user
+// Get all messages for current user (sent and received)
+router.get('/me', authenticateToken, getAllMessages);
+
+// Get all messages for current user (alternative route)
 router.get('/', authenticateToken, getAllMessages);
 
 // Get specific message (user must be sender or receiver)

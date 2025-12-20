@@ -6,6 +6,11 @@ const notificationSchema = new mongoose.Schema({
     required: true,
     enum: ['comment', 'reply', 'upvote', 'downvote', 'message', 'community']
   },
+  action: {
+    type: String,
+    required: true,
+    trim: true
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

@@ -10,12 +10,13 @@ const {
   downvotePost,
   getPostsByUser,
   getPostsByUserId,
-  getPostsByCommunity
+  getPostsByCommunity,
+  searchPosts
 } = require('./postController');
-const { authenticateToken } = require('../middleware/authMiddleware');
+const { authenticateToken, optionalAuthenticateToken } = require('../middleware/authMiddleware');
 
-// GET /api/posts - Get my feed
-router.get('/', authenticateToken, getMyFeed);
+// GET /api/posts - Get my feed (all posts if not authenticated, custom feed if authenticated)
+router.get('/', optionalAuthenticateToken, getMyFeed);
 
 // GET /api/posts/me - Get all posts by the current user
 router.get('/me', authenticateToken, getPostsByUser);
@@ -25,6 +26,9 @@ router.get('/community/:communityId', authenticateToken, getPostsByCommunity);
 
 // GET /api/posts/user/:userId - Get all posts by a specific user
 router.get('/user/:userId', authenticateToken, getPostsByUserId);
+
+// GET /api/posts/search/:query - Search posts by letters
+router.get('/search/:query', optionalAuthenticateToken, searchPosts);
 
 // GET /api/posts/:id - Get post by ID
 router.get('/:id', authenticateToken, getPostById);

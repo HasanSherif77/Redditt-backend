@@ -57,7 +57,38 @@ const authenticateToken = async (req, res, next) => {
 //   }
 // };
 
+// Optional authentication middleware - doesn't fail if no token, but sets req.user if token is valid
+const optionalAuthenticateToken = async (req, res, next) => {
+  try {
+    // Get token from Authorization header
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+      // No token provided - continue without setting req.user
+      return next();
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Find user and attach to request
+    const user = await User.findById(decoded.id).select('-password');
+    if (user) {
+      req.user = user;
+      req.token = token;
+    }
+    
+    next();
+  } catch (error) {
+    // If token is invalid, just continue without setting req.user
+    // Don't return error - allow request to proceed
+    next();
+  }
+};
+
 module.exports = {
-  authenticateToken
+  authenticateToken,
+  optionalAuthenticateToken
   // authorizeUser
 };

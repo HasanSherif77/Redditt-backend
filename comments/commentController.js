@@ -1,6 +1,7 @@
 const Comment = require('./commentModel');
 const Post = require('../posts/postModel');
 const Notification = require('../notifications/notificationModel');
+const User = require('../users/userModel');
 
 // Get all comments for the current user
 const getAllUserComments = async (req, res) => {
@@ -68,8 +69,12 @@ const createComment = async (req, res) => {
     
     // Create notification for post owner (don't notify if commenting on own post)
     if (post && post.userId.toString() !== req.user._id.toString()) {
+      const relatedUser = await User.findById(req.user._id).select('username');
       await Notification.create({
         type: comment.parentComment ? 'reply' : 'comment',
+        action: comment.parentComment 
+          ? `${relatedUser.username} replied to your comment`
+          : `${relatedUser.username} commented on your post`,
         user: post.userId,
         relatedUser: req.user._id,
         relatedPost: comment.postId,
@@ -139,8 +144,10 @@ const upvoteComment = async (req, res) => {
     // Handle both populated (object) and unpopulated (ObjectId) userId
     const commentOwnerId = comment.userId._id ? comment.userId._id.toString() : comment.userId.toString();
     if (commentOwnerId !== req.user._id.toString()) {
+      const relatedUser = await User.findById(req.user._id).select('username');
       await Notification.create({
         type: 'upvote',
+        action: `${relatedUser.username} upvoted your comment`,
         user: comment.userId._id || comment.userId,
         relatedUser: req.user._id,
         relatedComment: comment._id,
@@ -172,8 +179,10 @@ const downvoteComment = async (req, res) => {
     // Handle both populated (object) and unpopulated (ObjectId) userId
     const commentOwnerId = comment.userId._id ? comment.userId._id.toString() : comment.userId.toString();
     if (commentOwnerId !== req.user._id.toString()) {
+      const relatedUser = await User.findById(req.user._id).select('username');
       await Notification.create({
         type: 'downvote',
+        action: `${relatedUser.username} downvoted your comment`,
         user: comment.userId._id || comment.userId,
         relatedUser: req.user._id,
         relatedComment: comment._id,
@@ -187,6 +196,26 @@ const downvoteComment = async (req, res) => {
   }
 };
 
+// Search comments by query string (matches content)
+const searchComments = async (req, res) => {
+  try {
+    const q = req.params.query;
+    if (!q) return res.status(400).json({ error: 'Query parameter q is required' });
+    const regex = new RegExp(q, 'i');
+    const comments = await Comment.find({
+      content: regex
+    })
+      .populate('userId')
+      .populate('postId')
+      .populate('parentComment')
+      .sort({ createdAt: -1 }); // Sort by newest first
+
+    res.status(200).json(comments);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getAllUserComments,
   getAllPostComments,
@@ -195,6 +224,7 @@ module.exports = {
   updateComment,
   deleteComment,
   upvoteComment,
-  downvoteComment
+  downvoteComment,
+  searchComments
 };
 

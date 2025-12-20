@@ -33,9 +33,8 @@ const messageSchema = new mongoose.Schema({
 });
 
 /* Update updatedAt on save */
-messageSchema.pre('save', function (next) {
+messageSchema.pre('save', function () {
   this.updatedAt = Date.now();
-  next();
 });
 
 /* Indexes for better query performance */

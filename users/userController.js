@@ -75,7 +75,8 @@ const searchUsers = async (req, res) => {
     if (!q) return res.status(400).json({ error: 'Query parameter q is required' });
     const regex = new RegExp(q, 'i');
     const users = await User.find({
-      $or: [{ username: regex }, { displayname: regex }, { email: regex }]
+      $or: [{ username: regex }, { displayname: regex }, { email: regex }],
+      _id: { $ne: req.user._id } // Exclude current user from results
     }).select('-password'); // Exclude password from results
 
     res.status(200).json(users);
