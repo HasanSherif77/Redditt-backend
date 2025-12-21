@@ -1,3 +1,5 @@
+
+
 const express = require('express');
 const router = express.Router();
 const {
@@ -56,5 +58,6 @@ router.post('/communities/:communityId/join', authenticateToken, joinCommunity);
 
 // POST /api/users/communities/:communityId/leave - Leave a community
 router.post('/communities/:communityId/leave', authenticateToken, leaveCommunity);
+
 router.get('/search/:query', authenticateToken, searchUsers);
 module.exports = router;

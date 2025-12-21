@@ -1,3 +1,4 @@
+
 const Message = require('./messageModel');
 
 // Get all messages for the current user
