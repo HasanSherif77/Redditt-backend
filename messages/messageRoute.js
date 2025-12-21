@@ -5,7 +5,8 @@ const {
   getMessageById,
   createMessage,
   updateMessage,
-  deleteMessage
+  deleteMessage,
+  getConversation
 } = require('./messageController');
 
 const { authenticateToken } = require('../middleware/authMiddleware');
@@ -53,5 +54,7 @@ router.put('/:id', authenticateToken, checkMessageOwnership, updateMessage);
 
 // Delete message (only sender can delete)
 router.delete('/:id', authenticateToken, checkMessageOwnership, deleteMessage);
+
+router.get('/conversation/:id', authenticateToken, getConversation);
 
 module.exports = router;

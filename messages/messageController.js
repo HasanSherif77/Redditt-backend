@@ -9,10 +9,10 @@ const getAllMessages = async (req, res) => {
         { receiver: req.user._id }
       ]
     })
-    .populate('sender', 'username email')
-    .populate('receiver', 'username email')
+    .populate('sender', 'username displayname avatarUrl')
+    .populate('receiver', 'username displayname avatarUrl')
     .sort({ createdAt: -1 });
-    
+
     res.status(200).json(messages);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -23,9 +23,9 @@ const getAllMessages = async (req, res) => {
 const getMessageById = async (req, res) => {
   try {
     const message = await Message.findById(req.params.id)
-      .populate('sender', 'username email')
-      .populate('receiver', 'username email');
-    
+      .populate('sender', 'username displayname avatarUrl')
+      .populate('receiver', 'username displayname avatarUrl');
+
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
     }
@@ -67,9 +67,9 @@ const createMessage = async (req, res) => {
     await message.save();
     
     // Populate sender and receiver details
-    await message.populate('sender', 'username email');
-    await message.populate('receiver', 'username email');
-    
+   await message.populate('sender', 'username displayname avatarUrl');  
+   await message.populate('receiver', 'username displayname avatarUrl');
+
     res.status(201).json(message);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -90,9 +90,9 @@ const updateMessage = async (req, res) => {
       { ...req.body },
       { new: true, runValidators: true }
     )
-    .populate('sender', 'username email')
-    .populate('receiver', 'username email');
-    
+    .populate('sender', 'username displayname avatarUrl')  
+    .populate('receiver', 'username displayname avatarUrl');
+
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
     }
@@ -118,10 +118,34 @@ const deleteMessage = async (req, res) => {
   }
 };
 
+
+const getConversation = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUserId = req.user._id;
+
+    const messages = await Message.find({
+      $or: [
+        { sender: currentUserId, receiver: userId },
+        { sender: userId, receiver: currentUserId }
+      ]
+    })
+    .populate('sender', 'username displayname avatarUrl')
+    .populate('receiver', 'username displayname avatarUrl')
+    .sort({ createdAt: 1 }); // Oldest to newest for conversation view
+
+    res.status(200).json(messages);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 module.exports = {
   getAllMessages,
   getMessageById,
   createMessage,
   updateMessage,
-  deleteMessage
+  deleteMessage,
+  getConversation 
 };
